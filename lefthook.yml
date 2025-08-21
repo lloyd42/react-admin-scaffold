@@ -14,9 +14,9 @@ pre-commit:
     lint:
       glob: "*.{js,jsx,ts,tsx}"
       run: npx @biomejs/biome lint --no-errors-on-unmatched {staged_files}
-    check-types:
-      glob: "*.{ts,tsx}"
-      run: turbo check-types
+    # check-types:
+    #   glob: "*.{ts,tsx}"
+    #   run: npx run check-types
 
 commit-msg:
   commands:

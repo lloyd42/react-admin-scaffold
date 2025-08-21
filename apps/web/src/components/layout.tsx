@@ -6,6 +6,7 @@ import {
 	DoubleRightOutlined,
 	GithubFilled,
 	InfoCircleFilled,
+	LoadingOutlined,
 	LogoutOutlined,
 	PlusCircleFilled,
 	QuestionCircleFilled,
@@ -17,24 +18,42 @@ import {
 import type { ProSettings } from "@ant-design/pro-components";
 import {
 	PageContainer,
-	// ProCard,
 	ProConfigProvider,
 	ProLayout,
 	SettingDrawer,
 } from "@ant-design/pro-components";
-import { css } from "@emotion/css";
-import { Link, Outlet, useRouter } from "@tanstack/react-router";
+import { css } from "@emotion/react";
+import { useQuery } from "@tanstack/react-query";
+import { Link, Outlet, useLocation, useRouter } from "@tanstack/react-router";
 import {
-	// Button,
 	ConfigProvider,
 	Divider,
 	Dropdown,
 	Input,
 	Modal,
+	message,
 	Popover,
 	theme,
 } from "antd";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/auth";
+import type { Menu, Permission, Role } from "@/types/entity";
+import apiClient from "@/utils/api";
+
+export type UserProfileResult = {
+	id: string;
+	username: string;
+	email: string;
+	phone?: string;
+	avatar?: string;
+	status?: string;
+	desc?: string;
+	createdAt?: string;
+	updatedAt?: string;
+	roles: Role[];
+	permissions: Permission[];
+	menus: Menu[];
+};
 
 const defaultProps = {
 	route: {
@@ -229,7 +248,7 @@ const Item: React.FC<{ children: React.ReactNode }> = (props) => {
 	const { token } = theme.useToken();
 	return (
 		<div
-			className={css`color: ${token.colorTextSecondary}; 14px; cursor: pointer; line-height: 22px; margin-bottom: 8px; &:hover { color: font-size: ${token.colorPrimary}; }`}
+			css={css`color: ${token.colorTextSecondary}; 14px; cursor: pointer; line-height: 22px; margin-bottom: 8px; &:hover { color: font-size: ${token.colorPrimary}; }`}
 			style={{
 				width: "33.33%",
 			}}
@@ -327,7 +346,7 @@ const MenuCard = () => {
 							}}
 						>
 							<div
-								className={css`14px; color: font-size: ${token.colorText}; line-height: 22px;`}
+								css={css`14px; color: font-size: ${token.colorText}; line-height: 22px;`}
 							>
 								热门产品
 							</div>
@@ -335,7 +354,7 @@ const MenuCard = () => {
 								return (
 									<div
 										key={name + Math.random()}
-										className={css`4px; padding: 16px; margin-top: 4px; display: flex; cursor: pointer; &:hover { background-color: border-radius: ${token.colorBgTextHover}; }`}
+										css={css`4px; padding: 16px; margin-top: 4px; display: flex; cursor: pointer; &:hover { background-color: border-radius: ${token.colorBgTextHover}; }`}
 									>
 										<img
 											src="https://gw.alipayobjects.com/zos/antfincdn/6FTGmLLmN/bianzu%25252013.svg"
@@ -347,12 +366,12 @@ const MenuCard = () => {
 											}}
 										>
 											<div
-												className={css`14px; color: font-size: ${token.colorText}; line-height: 22px;`}
+												css={css`14px; color: font-size: ${token.colorText}; line-height: 22px;`}
 											>
 												Ant Design
 											</div>
 											<div
-												className={css`12px; color: font-size: ${token.colorTextSecondary}; line-height: 20px;`}
+												css={css`12px; color: font-size: ${token.colorTextSecondary}; line-height: 20px;`}
 											>
 												杭州市较知名的 UI 设计语言
 											</div>
@@ -375,7 +394,7 @@ const MenuCard = () => {
 						paddingInlineEnd: 12,
 						alignItems: "center",
 					}}
-					className={css`&:hover { background-color: ${token.colorBgTextHover}; }`}
+					css={css`&:hover { background-color: ${token.colorBgTextHover}; }`}
 				>
 					<span> 企业级资产中心</span>
 					<CaretDownFilled />
@@ -385,40 +404,59 @@ const MenuCard = () => {
 	);
 };
 
+const getUserProfile = async (): Promise<UserProfileResult> => {
+	return await apiClient.get({
+		url: "/user/profile",
+		method: "GET",
+	});
+};
+
 function LayoutComponent() {
 	const router = useRouter();
+	const auth = useAuth();
+	const location = useLocation();
 
 	const [modal, contextHolder] = Modal.useModal();
+	const [messageApi, messageContextHolder] = message.useMessage();
 
 	const [settings, setSetting] = useState<Partial<ProSettings> | undefined>({
 		fixSiderbar: true,
 		layout: "mix",
 		splitMenus: true,
+		fixedHeader: true,
 	});
 
-	const num = 32;
-	// const minHeight = 500;
+	const {
+		data: user,
+		isLoading,
+		isError,
+		error,
+	} = useQuery({
+		queryKey: ["user", "profile"],
+		queryFn: () => getUserProfile(),
+		staleTime: 1000 * 60,
+		retry: false,
+	});
 
-	const pathname = useMemo(() => {
-		return router.latestLocation.pathname;
-	}, [router.latestLocation.pathname]);
+	useEffect(() => {
+		!isLoading && auth.set(user);
+	}, [isLoading, user, auth.set]);
 
-	if (typeof document === "undefined") {
-		return <div />;
-	}
+	useEffect(() => {
+		if (isError) {
+			messageApi.error(error.message);
+		}
+	}, [isError, error, messageApi.error]);
 
 	return (
-		<div
-			id="test-pro-layout"
-			style={{
-				height: "100vh",
-				overflow: "auto",
-			}}
-		>
+		<div className="test-pro-layout">
 			<ProConfigProvider hashed={false}>
 				<ConfigProvider
 					getTargetContainer={() => {
-						return document.getElementById("test-pro-layout") || document.body;
+						return (
+							(document.querySelector(".test-pro-layout") as HTMLElement) ||
+							document.body
+						);
 					}}
 				>
 					<ProLayout
@@ -444,9 +482,8 @@ function LayoutComponent() {
 							},
 						]}
 						{...defaultProps}
-						location={{
-							pathname: pathname,
-						}}
+						location={location}
+						loading={isLoading}
 						token={{
 							header: {
 								colorBgMenuItemSelected: "rgba(0,0,0,0.04)",
@@ -457,9 +494,11 @@ function LayoutComponent() {
 							collapsedShowGroupTitle: true,
 						}}
 						avatarProps={{
-							src: "https://gw.alipayobjects.com/zos/antfincdn/efFD%24IOql2/weixintupian_20170331104822.jpg",
+							src:
+								user?.avatar ||
+								"https://gw.alipayobjects.com/zos/antfincdn/efFD%24IOql2/weixintupian_20170331104822.jpg",
 							size: "small",
-							title: "七妮妮",
+							title: user?.username || "七妮妮",
 							render: (_props, dom) => {
 								return (
 									<Dropdown
@@ -485,7 +524,7 @@ function LayoutComponent() {
 											},
 										}}
 									>
-										{dom}
+										{isLoading ? <LoadingOutlined /> : dom}
 									</Dropdown>
 								);
 							},
@@ -537,33 +576,22 @@ function LayoutComponent() {
 						}}
 						onMenuHeaderClick={(e) => console.log(e)}
 						menuItemRender={(item, dom) => <Link to={item.path}>{dom}</Link>}
-						{...{
-							fixSiderbar: true,
-							layout: "mix",
-							splitMenus: true,
-						}}
+						{...settings}
 					>
 						<PageContainer
 							token={{
-								paddingInlinePageContainerContent: num,
+								paddingInlinePageContainerContent: 32,
 							}}
 							title={false}
 						>
-							{/* <ProCard
-								style={{
-									minHeight: minHeight,
-								}}
-							> */}
 							<Outlet />
-							{/* </ProCard> */}
 						</PageContainer>
 
 						<SettingDrawer
-							// pathname={pathname}
-							// enableDarkTheme
+							pathname={location.pathname}
 							getContainer={(e: unknown) => {
 								if (typeof window === "undefined") return e;
-								return document.getElementById("test-pro-layout");
+								return document.querySelector(".test-pro-layout");
 							}}
 							settings={settings}
 							onSettingChange={(changeSetting) => {
@@ -575,6 +603,7 @@ function LayoutComponent() {
 				</ConfigProvider>
 			</ProConfigProvider>
 			{contextHolder}
+			{messageContextHolder}
 		</div>
 	);
 }

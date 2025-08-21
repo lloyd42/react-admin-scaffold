@@ -1,29 +1,19 @@
 {
-  "extends": "@tsconfig/vite-react/tsconfig.json",
-  "compilerOptions": {
-    "esModuleInterop": true,
-    "erasableSyntaxOnly": false,
-    "jsx": "react-jsx",
-    "target": "ESNext",
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "types": [
-      "vite/client",
-      "vitest/globals"
-    ],
-    "baseUrl": ".",
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ]
-    }
-  },
-  "include": [
-    "src",
-    "src/types"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+	"extends": "@tsconfig/vite-react/tsconfig.json",
+	"compilerOptions": {
+		"esModuleInterop": true,
+		"erasableSyntaxOnly": false,
+		"jsx": "react-jsx",
+		"jsxImportSource": "@emotion/react",
+		"target": "ESNext",
+		"module": "ESNext",
+		"skipLibCheck": true,
+		"types": ["vite/client", "vitest/globals"],
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./src/*"]
+		}
+	},
+	"include": ["src", "src/types"],
+	"exclude": ["node_modules", "dist", "src/routeTree.gen.ts"]
 }

@@ -8,7 +8,17 @@ export interface ApiResponse<T = unknown> {
 }
 
 // 分页数据结构
-export type ApiPaginatedResponse<T> = ApiResponse<T> & {
+export type ApiPaginatedResponse<T> = {
+	success: boolean;
+	msg: string;
+	data: {
+		list: T;
+		total: number;
+	};
+};
+
+export type PaginatedData<T> = {
+	list: T;
 	total: number;
 };
 
@@ -36,24 +46,25 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
 	(response) => {
-		const { data } = response;
+		const { success, msg, data } = response.data;
 
 		// 如果是文件下载等非 json 类型，直接返回响应体
 		if (response.headers["content-type"] !== "application/json") {
-			return response;
+			return response.data;
 		}
 
-		if (response.status === 200) {
-			// 如果请求成功，直接返回 data 部分
+		// 如果请求成功，直接返回 data 部分
+		if (success) {
 			return data;
 		}
 
-		// 如果 code 不为成功码，则为业务之外的错误
-		return Promise.reject(new Error(response.statusText || "Error"));
+		// 如果 success 不为真，则为业务错误
+		const error = new Error(msg || "业务错误");
+		return Promise.reject(error);
 	},
 	(error) => {
 		const { response, message } = error || {};
-		console.error("请求错误:", response?.data || message);
+		console.error("请求错误:", response?.data.msg || message || "网络请求失败");
 		if (response.status === 401) {
 			localStorage.removeItem("token");
 		}

@@ -16,8 +16,13 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import { Button, Divider, message, Space, Tabs, theme } from "antd";
 import { type CSSProperties, useState } from "react";
+import { Route } from "@/routes/login";
 import { useCaptcha, usePhoneLogin, useUsernameLogin } from "./api";
-import type { PostPhoneLoginParams, PostUsernameLoginParams } from "./type";
+import type {
+	LoginResult,
+	PostPhoneLoginParams,
+	PostUsernameLoginParams,
+} from "./type";
 
 type LoginType = "phone" | "account";
 
@@ -34,7 +39,7 @@ function LoginPage() {
 	const [loginType, setLoginType] = useState<LoginType>("account");
 	const { token } = theme.useToken();
 	const [messageApi, contextHolder] = message.useMessage();
-	// const queryClient = useQueryClient();
+	const search = Route.useSearch();
 
 	const items = [
 		{
@@ -76,39 +81,28 @@ function LoginPage() {
 
 	captchaError && messageApi.error(captchaError.message);
 
+	const handleLoginResponse = (data: LoginResult) => {
+		const { token } = data;
+		localStorage.setItem("token", token);
+
+		messageApi.success("登录成功", 1, () => {
+			search.redirect
+				? navigate({ to: search.redirect })
+				: navigate({ to: "/" });
+		});
+	};
+
 	const handleFinish = (value: Record<string, any>) => {
 		loginType === "account" &&
 			usernameLoginMutate(value as PostUsernameLoginParams, {
 				onSuccess(data) {
-					console.log(data);
-					if (!data.success) {
-						messageApi.error(data.msg);
-						return;
-					}
-					const { token } = data.data;
-					localStorage.setItem("token", token);
-					messageApi.success("登录成功", 1, () => {
-						navigate({ to: "/" });
-					});
-					// queryClient.invalidateQueries({
-					// 	queryKey: ["user", "profile"],
-					// });
+					handleLoginResponse(data);
 				},
 			});
 		loginType === "phone" &&
 			phoneLoginMutate(value as PostPhoneLoginParams, {
 				onSuccess(data) {
-					if (!data.success) {
-						messageApi.error(data.msg);
-						return;
-					}
-					const { token } = data.data;
-					localStorage.setItem("token", token);
-					messageApi.success("登录成功");
-					navigate({ to: "/" });
-					// queryClient.invalidateQueries({
-					// 	queryKey: ["user", "profile"],
-					// });
+					handleLoginResponse(data);
 				},
 			});
 	};

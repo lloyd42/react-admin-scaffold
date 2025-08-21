@@ -99,8 +99,10 @@ export const handlers = [
 		return HttpResponse.json<ApiPaginatedResponse<Table[]>>({
 			success: true,
 			msg: "success",
-			data: paginatedData,
-			total: total,
+			data: {
+				list: paginatedData,
+				total: total,
+			},
 		});
 	}),
 

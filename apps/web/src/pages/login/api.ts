@@ -11,8 +11,8 @@ import type {
 
 export const usernameLogin = (
 	params: PostUsernameLoginParams,
-): Promise<ApiResponse<LoginResult>> => {
-	return apiClient.post<ApiResponse<LoginResult>>({
+): Promise<LoginResult> => {
+	return apiClient.post<LoginResult>({
 		url: "/login/username",
 		method: "POST",
 		data: params,
@@ -21,8 +21,8 @@ export const usernameLogin = (
 
 export const phoneLogin = (
 	params: PostPhoneLoginParams,
-): Promise<ApiResponse<LoginResult>> => {
-	return apiClient.post<ApiResponse<LoginResult>>({
+): Promise<LoginResult> => {
+	return apiClient.post<LoginResult>({
 		url: "/login/phone",
 		method: "POST",
 		data: params,

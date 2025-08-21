@@ -1,6 +1,7 @@
 import { EllipsisOutlined, PlusOutlined } from "@ant-design/icons";
 import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import { ProTable, TableDropdown } from "@ant-design/pro-components";
+import { css } from "@emotion/react";
 import { Button, Dropdown, message, Space, Tag, Typography } from "antd";
 import { debounce } from "es-toolkit";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
@@ -137,6 +138,35 @@ const columns: ProColumns<Table>[] = [
 	},
 ];
 
+const tableStyle = css`
+	.ant-pro-table {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+	}
+	.ant-pro-card.ant-pro-card-border:nth-of-type(2) {
+		flex: 1;
+	}
+	.ant-pro-card-body {
+		display: flex;
+		flex-direction: column;
+	}
+	.ant-table-wrapper {
+		height: 100%;
+	}
+	.ant-spin-nested-loading {
+		height: 100%;
+	}
+	.ant-spin-container {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+	}
+	.ant-table-wrapper .ant-table {
+		flex: 1;
+	}
+`;
+
 function TablePage() {
 	const actionRef = useRef<ActionType>(null);
 
@@ -145,9 +175,9 @@ function TablePage() {
 	const num = 32;
 	const minHeight = 500;
 	const [contentHeight, setContentHeight] = useState(minHeight);
-	const [scrollHeight, setScrollHeight] = useState<number | undefined>(
-		undefined,
-	);
+	// const [scrollHeight, setScrollHeight] = useState<number | string | undefined>(
+	// 	undefined,
+	// );
 
 	const calculateHeight = useCallback(() => {
 		const layoutHeader = document.querySelector(
@@ -172,9 +202,7 @@ function TablePage() {
 		setContentHeight(calcHeight);
 	}, []);
 
-	const debouncedCalculate = useCallback(debounce(calculateHeight, 100), [
-		calculateHeight,
-	]);
+	const debouncedCalculate = debounce(calculateHeight, 100);
 
 	useLayoutEffect(() => {
 		calculateHeight();
@@ -187,37 +215,85 @@ function TablePage() {
 		};
 	}, [calculateHeight, debouncedCalculate]);
 
-	useLayoutEffect(() => {
-		const targetElement = document.querySelector(
-			".ant-pro-table-search-query-filter",
-		) as HTMLElement;
-		if (!targetElement) return;
+	// const computeHeight = useCallback(() => {
+	// 	const targetSearchElement = document.querySelector(
+	// 		".ant-pro-table-search-query-filter",
+	// 	) as HTMLElement;
+	// 	const targetTableToolbarElement = document.querySelector(
+	// 		".ant-pro-table-list-toolbar-container",
+	// 	) as HTMLElement;
+	// 	const targetTableTheadElement = document.querySelector(
+	// 		".ant-table-thead",
+	// 	) as HTMLElement;
+	// 	const targetTableHeaderElement = document.querySelector(
+	// 		".ant-table-header",
+	// 	) as HTMLElement;
+	// 	const targetTablePaginationElement = document.querySelector(
+	// 		".ant-table-wrapper .ant-table-pagination-right",
+	// 	) as HTMLElement;
+	// 	const targetTableTbodyElement = document.querySelector(
+	// 		".ant-table-tbody",
+	// 	) as HTMLElement;
 
-		// 创建ResizeObserver实例
-		const resizeObserver = new ResizeObserver((entries) => {
-			for (const entry of entries) {
-				const newHeight = entry.contentRect.height;
-				setScrollHeight(contentHeight - newHeight);
-			}
-		});
+	// 	console.log(
+	// 		targetTableToolbarElement,
+	// 		targetTableTheadElement,
+	// 		targetTableHeaderElement,
+	// 		targetTablePaginationElement,
+	// 		targetTableTbodyElement,
+	// 	);
 
-		resizeObserver.observe(targetElement);
+	// 	const scrollHeight =
+	// 		contentHeight -
+	// 		targetSearchElement.clientHeight -
+	// 		targetTableToolbarElement.clientHeight -
+	// 		(targetTableTheadElement?.clientHeight === 0
+	// 			? targetTableHeaderElement?.clientHeight
+	// 			: targetTableTheadElement?.clientHeight) -
+	// 		32 * 2 -
+	// 		16 -
+	// 		2;
 
-		return () => {
-			resizeObserver.unobserve(targetElement);
-			resizeObserver.disconnect();
-		};
-	}, [contentHeight]);
+	// 	setScrollHeight(
+	// 		targetTableTbodyElement.clientHeight >= scrollHeight
+	// 			? scrollHeight
+	// 			: undefined,
+	// 	);
+	// }, [contentHeight]);
+
+	// useLayoutEffect(() => {
+	// 	const elementsToObserve = [
+	// 		".ant-pro-table-search-query-filter",
+	// 		".ant-table-tbody",
+	// 	];
+
+	// 	const observedNodes: Element[] = [];
+	// 	const resizeObserver = new ResizeObserver(() => {
+	// 		computeHeight();
+	// 	});
+
+	// 	elementsToObserve.forEach((selector) => {
+	// 		const targetNode = document.querySelector(selector);
+	// 		if (targetNode) {
+	// 			resizeObserver.observe(targetNode);
+	// 			observedNodes.push(targetNode);
+	// 		}
+	// 	});
+
+	// 	return () => {
+	// 		observedNodes.forEach((node) => {
+	// 			resizeObserver.unobserve(node);
+	// 		});
+	// 		resizeObserver.disconnect();
+	// 	};
+	// }, [computeHeight]);
 
 	return (
-		<div style={{ height: contentHeight }}>
+		<div style={{ height: contentHeight }} css={tableStyle}>
 			<ProTable<Table>
 				columns={columns}
 				actionRef={actionRef}
 				cardBordered
-				style={{
-					height: contentHeight,
-				}}
 				request={async (params, sort, filter) => {
 					console.log(params, sort, filter);
 					const { current, pageSize, ...search } = params;
@@ -232,13 +308,9 @@ function TablePage() {
 
 					const data = await getTableList({ ...requestParams });
 
-					if (!data.success) {
-						messageApi.warning(data.msg);
-					}
-
 					return {
-						data: data?.data || [],
-						success: data?.success,
+						data: data.list || [],
+						success: true,
 						total: data?.total,
 					};
 				}}
@@ -272,7 +344,7 @@ function TablePage() {
 					showSizeChanger: true,
 					defaultPageSize: 10,
 				}}
-				scroll={{ y: scrollHeight }}
+				// scroll={{ y: scrollHeight }}
 				dateFormatter="string"
 				headerTitle="高级表格"
 				toolBarRender={() => [

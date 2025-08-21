@@ -124,21 +124,19 @@ export const handlers = [
 			DB_PERMISSION.find((permission) => permission.id === item.permissionId),
 		);
 
-		const menu = convertFlatToTree(DB_MENU);
+		const menus = convertFlatToTree(DB_MENU);
 
 		await delay(300);
 
 		return HttpResponse.json({
 			success: true,
 			msg: "success",
-			data: Array.from({ length: 10 }).map(() => ({
-				avatar: faker.image.avatarGitHub(),
-				address: faker.location.streetAddress(),
-				userWithoutPassword,
+			data: {
+				...userWithoutPassword,
 				roles,
 				permissions,
-				menu,
-			})),
+				menus,
+			},
 		});
 	}),
 ];

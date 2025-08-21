@@ -1,14 +1,14 @@
 import { afterAll, afterEach, beforeAll } from "vitest";
-import { server } from "./src/mocks/node";
+import { worker } from "./src/mocks/node";
 
 beforeAll(() => {
-	server.listen();
+	worker.listen();
 });
 
 afterEach(() => {
-	server.resetHandlers();
+	worker.resetHandlers();
 });
 
 afterAll(() => {
-	server.close();
+	worker.close();
 });

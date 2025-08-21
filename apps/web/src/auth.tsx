@@ -1,54 +1,24 @@
 import * as React from "react";
-
-import { sleep } from "./utils/index";
+import type { UserProfileResult } from "./components/layout";
 
 export interface AuthContext {
 	isAuthenticated: boolean;
-	login: (username: string) => Promise<void>;
-	logout: () => Promise<void>;
-	user: string | null;
+	user: UserProfileResult | undefined;
+	set: (value: UserProfileResult | undefined) => void;
 }
 
 const AuthContext = React.createContext<AuthContext | null>(null);
 
-const key = "tanstack.auth.user";
-
-function getStoredUser() {
-	return localStorage.getItem(key);
-}
-
-function setStoredUser(user: string | null) {
-	if (user) {
-		localStorage.setItem(key, user);
-	} else {
-		localStorage.removeItem(key);
-	}
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-	const [user, setUser] = React.useState<string | null>(getStoredUser());
+	const [user, setUser] = React.useState<UserProfileResult | undefined>();
 	const isAuthenticated = !!user;
 
-	const logout = React.useCallback(async () => {
-		await sleep(250);
-
-		setStoredUser(null);
-		setUser(null);
-	}, []);
-
-	const login = React.useCallback(async (username: string) => {
-		await sleep(500);
-
-		setStoredUser(username);
-		setUser(username);
-	}, []);
-
-	React.useEffect(() => {
-		setUser(getStoredUser());
+	const set = React.useCallback((value: UserProfileResult | undefined) => {
+		setUser(value);
 	}, []);
 
 	return (
-		<AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+		<AuthContext.Provider value={{ isAuthenticated, user, set }}>
 			{children}
 		</AuthContext.Provider>
 	);

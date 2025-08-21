@@ -17,14 +17,14 @@ export default defineConfig(({ mode }) => {
 		base,
 		plugins: [
 			tailwindcss(),
-			tanstackRouter({}),
+			tanstackRouter({ autoCodeSplitting: true }),
 			react(),
 			isProduction &&
-			visualizer({
-				open: true,
-				gzipSize: true,
-				brotliSize: true,
-			}),
+				visualizer({
+					open: true,
+					gzipSize: true,
+					brotliSize: true,
+				}),
 		].filter(Boolean),
 		test: {
 			environment: "jsdom",
@@ -60,13 +60,18 @@ export default defineConfig(({ mode }) => {
 				output: {
 					manualChunks: {
 						"vendor-core": ["react", "react-dom", "@tanstack/react-router"],
-						"vendor-ui": ["antd", "@ant-design/pro-components", "@ant-design/cssinjs", "@emotion/css"],
+						"vendor-ui": [
+							"antd",
+							"@ant-design/pro-components",
+							"@ant-design/cssinjs",
+							"@emotion/css",
+						],
 						"vendor-utils": [
 							"axios",
 							"dayjs",
 							"zustand",
 							"@iconify/react",
-							"@ant-design/icons"
+							"@ant-design/icons",
 						],
 						"vendor-charts": ["echarts", "echarts-for-react"],
 					},
@@ -74,7 +79,14 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		optimizeDeps: {
-			include: ["react", "react-dom", "@tanstack/react-router", "antd", "axios", "dayjs"],
+			include: [
+				"react",
+				"react-dom",
+				"@tanstack/react-router",
+				"antd",
+				"axios",
+				"dayjs",
+			],
 			exclude: ["@iconify/react"],
 		},
 		esbuild: {

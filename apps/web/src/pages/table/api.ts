@@ -1,34 +1,31 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ApiPaginatedResponse, ApiResponse } from "@/utils/api";
-import apiClient from "@/utils/api";
+import apiClient, { type PaginatedData } from "@/utils/api";
 import type { GetTablesParams, Table } from "./type";
 
 export const getTableList = (
 	params: GetTablesParams,
-): Promise<ApiPaginatedResponse<Table[]>> => {
+): Promise<PaginatedData<Table[]>> => {
 	const { current, pageSize, ...filters } = params;
 	const apiParams = {
 		current,
 		pageSize,
 		...filters,
 	};
-	return apiClient.get<ApiPaginatedResponse<Table[]>>({
+	return apiClient.get<PaginatedData<Table[]>>({
 		url: "/tables",
 		method: "GET",
 		params: apiParams,
 	});
 };
 
-export const getTableById = async (id: number): Promise<ApiResponse<Table>> => {
+export const getTableById = async (id: number): Promise<Table> => {
 	return await apiClient.get({
 		url: `/tables/${id}`,
 		method: "GET",
 	});
 };
 
-export const createTable = async (
-	table: Omit<Table, "id">,
-): Promise<ApiResponse<Table>> => {
+export const createTable = async (table: Omit<Table, "id">): Promise<Table> => {
 	return await apiClient.post({
 		url: "/tables",
 		method: "POST",
@@ -36,9 +33,7 @@ export const createTable = async (
 	});
 };
 
-export const updateTable = async (
-	table: Table,
-): Promise<ApiResponse<Table>> => {
+export const updateTable = async (table: Table): Promise<Table> => {
 	return await apiClient.put({
 		url: "/tables",
 		method: "PUT",
@@ -46,7 +41,7 @@ export const updateTable = async (
 	});
 };
 
-export const deleteTable = async (id: number): Promise<ApiResponse> => {
+export const deleteTable = async (id: number): Promise<void> => {
 	return await apiClient.delete({
 		url: "/tables",
 		method: "DELETE",
@@ -94,7 +89,7 @@ export const useUpdateTable = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (updatedTable: Table) => updateTable(updatedTable),
-		onSuccess: ({ data }) => {
+		onSuccess: (data) => {
 			// 更新成功后，同时使列表和对应详情的查询失效
 			queryClient.invalidateQueries({ queryKey: tablesKeys.tables() });
 			queryClient.invalidateQueries({ queryKey: tablesKeys.detail(data.id) });
